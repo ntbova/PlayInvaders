@@ -82,6 +82,28 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 	return 0;
 }
 
+int check_collision(PDRect a, PDRect b) {
+    //The sides of the rectangles
+    int leftA, leftB, rightA, rightB;
+    int topA, topB, bottomA, bottomB;
+
+    //Calculate the sides of rect A
+    leftA = a.x; rightA = a.x + a.width;
+    topA = a.y; bottomA = a.y + a.height;
+
+    //Calculate the sides of rect B
+    leftB = b.x; rightB = b.x + b.width;
+    topB = b.y; bottomB = b.y + b.height;
+    //If any of the sides from A are outside of B
+    if( bottomA <= topB ) { return 0; }
+    if( topA >= bottomB ) { return 0; }
+    if( rightA <= leftB ) { return 0; }
+    if( leftA >= rightB ) { return 0; }
+
+    //If none of the sides from A are outside B
+    return 1;
+}
+
 void shootBullets(GameState* state) {
     // Only shoot bullets if we haven't reached the max. Will do this by simply
     // checking to see if any bullets are set to INT32_MIN
@@ -123,6 +145,19 @@ void moveAssets(GameState* state) {
     for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] != INT32_MIN) {
             state->bullet_pos_y[i] -= BULLET_SPEED;
+            // After moving bullet, check to see if it collides with any of the enemies.
+            // Remove them both in this case.
+            PDRect bullet, enemy;
+            bullet.x = state->bullet_pos_x[i]; bullet.y = state->bullet_pos_y[i];
+            bullet.width = BULLET_WIDTH; bullet.height = BULLET_HEIGHT;
+            enemy.width = ENEMY_WIDTH; enemy.height = ENEMY_HEIGHT;
+            for (int j = 0; j < ENEMY_MAX; j++) {
+                enemy.x = state->enemy_pos_x[j]; enemy.y = state->enemy_pos_y[j];
+                if (check_collision(bullet, enemy)) {
+                    state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+                    state->enemy_pos_x[j] = INT32_MIN; state->enemy_pos_y[j] = INT32_MIN;
+                }
+            }
         }
         if (state->bullet_pos_y[i] < 0) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
@@ -134,7 +169,6 @@ void renderAssets(GameState* state) {
     state->pd->graphics->clear(kColorWhite);
     state->pd->system->drawFPS(0,0);
     state->pd->graphics->fillRect(state->ship_pos_x, state->ship_pos_y, PLAYER_WIDTH, PLAYER_HEIGHT, kColorBlack);
-    
     // Render bullets on screen
     for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] != INT32_MIN) {
