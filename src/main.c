@@ -49,7 +49,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
         GameState* state = (GameState*) malloc(sizeof(GameState));
         state->pd = pd;
         state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
-        state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y /= 2;
+        state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
         
         for (int i = 0; i < NUM_BULLET_MAX; i++) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
@@ -82,12 +82,16 @@ void checkButtons(GameState* state) {
     
     state->pd->system->getButtonState(&current, &pushed, NULL);
     
-    int speed = PLAYER_SPEED;
-
-    if (current & kButtonDown) { state->ship_pos_y += speed; }
-    else if (current & kButtonUp) { state->ship_pos_y -= speed; }
-    if (current & kButtonRight) { state->ship_pos_x += speed; }
-    else if (current & kButtonLeft) { state->ship_pos_x -= speed; }
+    if (current & kButtonRight) {
+        if (state->ship_pos_x < MAX_WIDTH - PLAYER_WIDTH ) {
+            state->ship_pos_x += PLAYER_SPEED;
+        }
+    }
+    else if (current & kButtonLeft) {
+        if (state->ship_pos_x > 0 ) {
+            state->ship_pos_x -= PLAYER_SPEED;
+        }
+    }
     
     if (pushed & kButtonB) { shootBullets(state); }
 }
