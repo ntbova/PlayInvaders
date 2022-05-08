@@ -12,14 +12,15 @@
 #define BULLET_MAX 2
 #define ENEMY_MAX 26
 #define MAX_FRAMERATE 50
-
 #define PLAYER_SPEED 5
 #define BULLET_SPEED 5
+#define ENEMY_SPEED 5
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
 #define SCREEN_MARGIN 24
 #define ENEMY_MARGIN_WIDTH 30
 #define ENEMY_MARGIN_HEIGHT 5
+#define ENEMY_MOVEMENT_FREQ 1000 // ms
 
 static int update(void* userdata);
 
@@ -31,6 +32,7 @@ typedef struct GameStates {
     int bullet_pos_y[BULLET_MAX];
     int enemy_pos_x[ENEMY_MAX];
     int enemy_pos_y[ENEMY_MAX];
+    int enemy_move_time;
 } GameState;
 
 #ifdef _WINDLL
@@ -74,6 +76,8 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
                 currEnemyPosX = SCREEN_MARGIN; currEnemyPosY += ENEMY_MARGIN_HEIGHT + ENEMY_HEIGHT;
             }
         }
+        
+        state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
         
         pd->display->setRefreshRate(MAX_FRAMERATE);
 		pd->system->setUpdateCallback(update, state);
@@ -162,6 +166,19 @@ void moveAssets(GameState* state) {
         if (state->bullet_pos_y[i] < 0) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
         }
+    }
+    
+    // If enough time has passed (ENEMY_MOVEMENT_FREQ), go through and move each
+    // enemy still active
+    int currTime = state->pd->system->getCurrentTimeMilliseconds();
+    if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ) {
+        for (int i = 0; i < ENEMY_MAX; i++) {
+            if (state->enemy_pos_y[i] != INT32_MIN) {
+                state->enemy_pos_y[i] += ENEMY_SPEED;
+            }
+        }
+        // Reset enemy move time
+        state->enemy_move_time = currTime;
     }
 }
 
