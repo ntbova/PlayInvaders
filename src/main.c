@@ -7,13 +7,19 @@
 #define PLAYER_WIDTH 50
 #define BULLET_HEIGHT 5
 #define BULLET_WIDTH 5
-#define NUM_BULLET_MAX 2
+#define ENEMY_HEIGHT 18
+#define ENEMY_WIDTH 18
+#define BULLET_MAX 2
+#define ENEMY_MAX 26
 #define MAX_FRAMERATE 50
 
 #define PLAYER_SPEED 5
 #define BULLET_SPEED 5
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
+#define SCREEN_MARGIN 24
+#define ENEMY_MARGIN_WIDTH 30
+#define ENEMY_MARGIN_HEIGHT 5
 
 static int update(void* userdata);
 
@@ -21,8 +27,10 @@ typedef struct GameStates {
     PlaydateAPI* pd;
     int ship_pos_x;
     int ship_pos_y;
-    int bullet_pos_x[NUM_BULLET_MAX];
-    int bullet_pos_y[NUM_BULLET_MAX];
+    int bullet_pos_x[BULLET_MAX];
+    int bullet_pos_y[BULLET_MAX];
+    int enemy_pos_x[ENEMY_MAX];
+    int enemy_pos_y[ENEMY_MAX];
 } GameState;
 
 #ifdef _WINDLL
@@ -51,8 +59,20 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
         state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
         state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
         
-        for (int i = 0; i < NUM_BULLET_MAX; i++) {
+        for (int i = 0; i < BULLET_MAX; i++) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+        }
+        
+        int currEnemyPosX = SCREEN_MARGIN; int currEnemyPosY = SCREEN_MARGIN;
+        for (int i = 0; i < ENEMY_MAX; i++) {
+            // For layout of enemies on screen, start from the top of the screen with a certain margin,
+            // if we reach the end of the screen, then reset the x position and start a new row
+            if (currEnemyPosX < MAX_WIDTH - SCREEN_MARGIN) {
+                state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
+                currEnemyPosX += ENEMY_MARGIN_WIDTH + ENEMY_WIDTH;
+            } else {
+                currEnemyPosX = SCREEN_MARGIN; currEnemyPosY += ENEMY_MARGIN_HEIGHT + ENEMY_HEIGHT;
+            }
         }
         
         pd->display->setRefreshRate(MAX_FRAMERATE);
@@ -65,7 +85,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 void shootBullets(GameState* state) {
     // Only shoot bullets if we haven't reached the max. Will do this by simply
     // checking to see if any bullets are set to INT32_MIN
-    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+    for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] == INT32_MIN) {
             // Set the bullet at and above where the player is
             state->bullet_pos_x[i] = state->ship_pos_x + (PLAYER_WIDTH / 2);
@@ -100,7 +120,7 @@ void moveAssets(GameState* state) {
     // Go through each bullet currently on the screen, decrease y-axis value.
     // Once the bullet leaves the boundries of the screen, reset its positional
     // value to INT32_MIN
-    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+    for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] != INT32_MIN) {
             state->bullet_pos_y[i] -= BULLET_SPEED;
         }
@@ -115,9 +135,16 @@ void renderAssets(GameState* state) {
     state->pd->system->drawFPS(0,0);
     state->pd->graphics->fillRect(state->ship_pos_x, state->ship_pos_y, PLAYER_WIDTH, PLAYER_HEIGHT, kColorBlack);
     
-    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+    // Render bullets on screen
+    for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] != INT32_MIN) {
             state->pd->graphics->fillRect(state->bullet_pos_x[i], state->bullet_pos_y[i], BULLET_WIDTH, BULLET_HEIGHT, kColorBlack);
+        }
+    }
+    // Render enemies on screen
+    for (int i = 0; i < ENEMY_MAX; i++) {
+        if (state->enemy_pos_x[i] != INT32_MIN) {
+            state->pd->graphics->fillRect(state->enemy_pos_x[i], state->enemy_pos_y[i], ENEMY_WIDTH, ENEMY_HEIGHT, kColorBlack);
         }
     }
 }
