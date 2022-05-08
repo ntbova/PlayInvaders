@@ -5,9 +5,13 @@
 
 #define PLAYER_HEIGHT 10
 #define PLAYER_WIDTH 50
+#define BULLET_HEIGHT 5
+#define BULLET_WIDTH 5
 #define NUM_BULLET_MAX 2
+#define MAX_FRAMERATE 50
 
 #define PLAYER_SPEED 5
+#define BULLET_SPEED 5
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
 
@@ -51,8 +55,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
         }
         
-        pd->display->setRefreshRate(30);
-		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
+        pd->display->setRefreshRate(MAX_FRAMERATE);
 		pd->system->setUpdateCallback(update, state);
 	}
 	
@@ -60,7 +63,17 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 }
 
 void shootBullets(GameState* state) {
-    
+    // Only shoot bullets if we haven't reached the max. Will do this by simply
+    // checking to see if any bullets are set to INT32_MIN
+    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+        if (state->bullet_pos_y[i] == INT32_MIN) {
+            // Set the bullet at and above where the player is
+            state->bullet_pos_x[i] = state->ship_pos_x + (PLAYER_WIDTH / 2);
+            state->bullet_pos_y[i] = state->ship_pos_y - BULLET_HEIGHT;
+            // Break out of the loop (only shoot one bullet at a time)
+            break;
+        }
+    }
 }
 
 void checkButtons(GameState* state) {
@@ -79,16 +92,37 @@ void checkButtons(GameState* state) {
     if (pushed & kButtonB) { shootBullets(state); }
 }
 
+void moveAssets(GameState* state) {
+    // Go through each bullet currently on the screen, decrease y-axis value.
+    // Once the bullet leaves the boundries of the screen, reset its positional
+    // value to INT32_MIN
+    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+        if (state->bullet_pos_y[i] != INT32_MIN) {
+            state->bullet_pos_y[i] -= BULLET_SPEED;
+        }
+        if (state->bullet_pos_y[i] < 0) {
+            state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+        }
+    }
+}
+
 void renderAssets(GameState* state) {
     state->pd->graphics->clear(kColorWhite);
     state->pd->system->drawFPS(0,0);
     state->pd->graphics->fillRect(state->ship_pos_x, state->ship_pos_y, PLAYER_WIDTH, PLAYER_HEIGHT, kColorBlack);
+    
+    for (int i = 0; i < NUM_BULLET_MAX; i++) {
+        if (state->bullet_pos_y[i] != INT32_MIN) {
+            state->pd->graphics->fillRect(state->bullet_pos_x[i], state->bullet_pos_y[i], BULLET_WIDTH, BULLET_HEIGHT, kColorBlack);
+        }
+    }
 }
 
 static int update(void* userdata) {
 	GameState* state = userdata;
 	
     checkButtons(state);
+    moveAssets(state);
     renderAssets(state);
     
 	return 1;
