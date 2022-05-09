@@ -21,11 +21,15 @@
 #define ENEMY_MARGIN_WIDTH 30
 #define ENEMY_MARGIN_HEIGHT 5
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
+#define SCORE_MULTIPLIER 10
+#define SCORE_POS_X 360
+#define SCORE_POS_Y 5
 
 static int update(void* userdata);
 
 typedef struct GameStates {
     PlaydateAPI* pd;
+    int curr_score;
     int ship_pos_x;
     int ship_pos_y;
     int bullet_pos_x[BULLET_MAX];
@@ -78,6 +82,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
         }
         
         state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
+        state->curr_score = 0;
         
         pd->display->setRefreshRate(MAX_FRAMERATE);
 		pd->system->setUpdateCallback(update, state);
@@ -160,6 +165,8 @@ void moveAssets(GameState* state) {
                 if (check_collision(bullet, enemy)) {
                     state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
                     state->enemy_pos_x[j] = INT32_MIN; state->enemy_pos_y[j] = INT32_MIN;
+                    // Increment score after hit
+                    state->curr_score += SCORE_MULTIPLIER;
                 }
             }
         }
@@ -198,6 +205,9 @@ void renderAssets(GameState* state) {
             state->pd->graphics->fillRect(state->enemy_pos_x[i], state->enemy_pos_y[i], ENEMY_WIDTH, ENEMY_HEIGHT, kColorBlack);
         }
     }
+    // Render score
+    char scoreStr[20]; sprintf(scoreStr, "%d", state->curr_score);
+    state->pd->graphics->drawText(scoreStr, 20, kASCIIEncoding, SCORE_POS_X, SCORE_POS_Y);
 }
 
 static int update(void* userdata) {
