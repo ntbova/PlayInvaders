@@ -13,6 +13,7 @@
 #define ENEMY_MAX 26
 #define MAX_FRAMERATE 50
 #define PLAYER_SPEED 5
+#define PLAYER_CRANK_SPEED 0.5f
 #define BULLET_SPEED 5
 #define ENEMY_SPEED 5
 #define MAX_HEIGHT 240
@@ -144,7 +145,15 @@ void checkButtons(GameState* state) {
         }
     }
     
-    if (pushed & kButtonB) { shootBullets(state); }
+    if (pushed & kButtonB || pushed & kButtonUp) { shootBullets(state); }
+}
+
+void checkCrank(GameState* state) {
+    float change = state->pd->system->getCrankChange();
+    int newPlayPosX = state->ship_pos_x + (change * PLAYER_CRANK_SPEED);
+    if (newPlayPosX < 0) { newPlayPosX = 0; }
+    else if (newPlayPosX > MAX_WIDTH - PLAYER_WIDTH) { newPlayPosX = MAX_WIDTH - PLAYER_WIDTH; }
+    state->ship_pos_x = newPlayPosX;
 }
 
 void moveAssets(GameState* state) {
@@ -214,6 +223,7 @@ static int update(void* userdata) {
 	GameState* state = userdata;
 	
     checkButtons(state);
+    checkCrank(state);
     moveAssets(state);
     renderAssets(state);
     
