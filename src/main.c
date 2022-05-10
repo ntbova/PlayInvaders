@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "pd_api.h"
 
@@ -28,8 +29,16 @@
 
 static int update(void* userdata);
 
+enum GamePhases {
+    pMainMenu = 0,
+    pGameRunning = 1,
+    pGameOver = -1
+};
+
 typedef struct GameStates {
     PlaydateAPI* pd;
+    LCDFont* title_font;
+    enum GamePhases curr_phase;
     int curr_score;
     int ship_pos_x;
     int ship_pos_y;
@@ -82,6 +91,10 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
             }
         }
         
+        // Fonts
+        state->title_font = state->pd->graphics->loadFont("fonts/BebasNeue-Regular-48", NULL);
+        
+        state->curr_phase = pMainMenu;
         state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
         state->curr_score = 0;
         
@@ -219,13 +232,39 @@ void renderAssets(GameState* state) {
     state->pd->graphics->drawText(scoreStr, 20, kASCIIEncoding, SCORE_POS_X, SCORE_POS_Y);
 }
 
+void mainMenuLoop(GameState* state) {
+    char* title = "Play Invaders";
+    
+    state->pd->graphics->setFont(state->title_font);
+    state->pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 47, 50);
+    
+    PDButtons pushed;
+    state->pd->system->getButtonState(NULL, &pushed, NULL);
+    if (pushed & kButtonA || pushed & kButtonB) { state->curr_phase = pGameRunning; }
+}
+
+void gameOverLoop(GameState* state) {
+    
+}
+
 static int update(void* userdata) {
 	GameState* state = userdata;
 	
-    checkButtons(state);
-    checkCrank(state);
-    moveAssets(state);
-    renderAssets(state);
+    switch (state->curr_phase)
+    {
+        case pMainMenu:
+            mainMenuLoop(state);
+            break;
+        case pGameRunning:
+            checkButtons(state);
+            checkCrank(state);
+            moveAssets(state);
+            renderAssets(state);
+            break;
+        case pGameOver:
+            gameOverLoop(state);
+            break;
+    }
     
 	return 1;
 }
