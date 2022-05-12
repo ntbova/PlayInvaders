@@ -12,7 +12,7 @@
 #define ENEMY_WIDTH 18
 #define BULLET_MAX 2
 #define ENEMY_MAX 26
-#define MAX_FRAMERATE 50
+#define MAX_FRAMERATE 30
 #define PLAYER_SPEED 5
 #define PLAYER_CRANK_SPEED 0.5f
 #define BULLET_SPEED 5
@@ -38,8 +38,9 @@ enum GamePhases {
 typedef struct GameStates {
     PlaydateAPI* pd;
     LCDFont* title_font;
+    LCDFont* score_font;
     enum GamePhases curr_phase;
-    int curr_score;
+    uint32_t curr_score;
     int ship_pos_x;
     int ship_pos_y;
     int bullet_pos_x[BULLET_MAX];
@@ -66,33 +67,48 @@ LCDSprite* loadSpriteFromBitmap(PlaydateAPI* pd, LCDBitmap* bmp, LCDBitmapFlip f
     return pathSprite;
 }
 
+void initGameRunning(GameState* state) {
+    state->curr_phase = pGameRunning;
+    
+    state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
+    state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
+    
+    for (int i = 0; i < BULLET_MAX; i++) {
+        state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+        state->enemy_pos_x[i] = INT32_MIN; state->enemy_pos_y[i] = INT32_MIN;
+    }
+    
+    int currEnemyPosX = SCREEN_MARGIN; int currEnemyPosY = SCREEN_MARGIN;
+    for (int i = 0; i < ENEMY_MAX; i++) {
+        // For layout of enemies on screen, start from the top of the screen with a certain margin,
+        // if we reach the end of the screen, then reset the x position and start a new row
+        if (currEnemyPosX < MAX_WIDTH - SCREEN_MARGIN) {
+            state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
+            currEnemyPosX += ENEMY_MARGIN_WIDTH + ENEMY_WIDTH;
+        } else {
+            currEnemyPosX = SCREEN_MARGIN; currEnemyPosY += ENEMY_MARGIN_HEIGHT + ENEMY_HEIGHT;
+        }
+    }
+    
+    state->pd->graphics->setFont(state->score_font);
+}
+
+void initGameOver(GameState* state) {
+    state->curr_phase = pGameOver;
+    state->pd->graphics->setFont(state->title_font);
+}
+
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 	(void)arg; // arg is currently only used for event = kEventKeyPressed
 
 	if ( event == kEventInit ) {
-        GameState* state = (GameState*) malloc(sizeof(GameState));
+        GameState* state = pd->system->realloc(NULL,sizeof(GameState));
         state->pd = pd;
-        state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
-        state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
-        
-        for (int i = 0; i < BULLET_MAX; i++) {
-            state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
-        }
-        
-        int currEnemyPosX = SCREEN_MARGIN; int currEnemyPosY = SCREEN_MARGIN;
-        for (int i = 0; i < ENEMY_MAX; i++) {
-            // For layout of enemies on screen, start from the top of the screen with a certain margin,
-            // if we reach the end of the screen, then reset the x position and start a new row
-            if (currEnemyPosX < MAX_WIDTH - SCREEN_MARGIN) {
-                state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
-                currEnemyPosX += ENEMY_MARGIN_WIDTH + ENEMY_WIDTH;
-            } else {
-                currEnemyPosX = SCREEN_MARGIN; currEnemyPosY += ENEMY_MARGIN_HEIGHT + ENEMY_HEIGHT;
-            }
-        }
         
         // Fonts
         state->title_font = state->pd->graphics->loadFont("fonts/BebasNeue-Regular-48", NULL);
+        state->score_font = state->pd->graphics->loadFont("fonts/galvaniz-20", NULL);
+        state->pd->graphics->setFont(state->title_font);
         
         state->curr_phase = pMainMenu;
         state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
@@ -104,6 +120,28 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 	
 	return 0;
 }
+
+int num_places(int n) {
+    int r = 1;
+    if (n < 0) n = (n == INT32_MIN) ? INT32_MAX: -n;
+    while (n > 9) {
+        n /= 10;
+        r++;
+    }
+    return r;
+}
+
+void get_dec_str(char* str, size_t len, uint32_t val)
+{
+    uint8_t i;
+    for(i=1; i<=len; i++)
+    {
+        str[len-i] = (uint8_t) ((val % 10UL) + '0');
+        val /= 10;
+    }
+    str[i-1] = '\0';
+}
+
 
 int check_collision(PDRect a, PDRect b) {
     //The sides of the rectangles
@@ -204,6 +242,11 @@ void moveAssets(GameState* state) {
         for (int i = 0; i < ENEMY_MAX; i++) {
             if (state->enemy_pos_y[i] != INT32_MIN) {
                 state->enemy_pos_y[i] += ENEMY_SPEED;
+                // If enemy reaches the bottom of the screen, set the game
+                // into a game over phase
+                if (state->enemy_pos_y[i] >= MAX_HEIGHT) {
+                    initGameOver(state); break;
+                }
             }
         }
         // Reset enemy move time
@@ -212,7 +255,12 @@ void moveAssets(GameState* state) {
 }
 
 void renderAssets(GameState* state) {
+    
     state->pd->graphics->clear(kColorWhite);
+    
+    // Don't render assets if we've switched to a game over or other phase
+    if (state->curr_phase != pGameRunning) { return; }
+    
     state->pd->system->drawFPS(0,0);
     state->pd->graphics->fillRect(state->ship_pos_x, state->ship_pos_y, PLAYER_WIDTH, PLAYER_HEIGHT, kColorBlack);
     // Render bullets on screen
@@ -228,23 +276,27 @@ void renderAssets(GameState* state) {
         }
     }
     // Render score
-    char scoreStr[20]; sprintf(scoreStr, "%d", state->curr_score);
-    state->pd->graphics->drawText(scoreStr, 20, kASCIIEncoding, SCORE_POS_X, SCORE_POS_Y);
+    // Get number of digits in the score
+    int digits = num_places(state->curr_score);
+    char scoreStr[digits]; get_dec_str(scoreStr, digits, state->curr_score);
+    state->pd->graphics->drawText(scoreStr, digits, kASCIIEncoding, SCORE_POS_X, SCORE_POS_Y);
 }
 
 void mainMenuLoop(GameState* state) {
     char* title = "Play Invaders";
-    
-    state->pd->graphics->setFont(state->title_font);
-    state->pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 47, 50);
+    state->pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 48, 50);
     
     PDButtons pushed;
     state->pd->system->getButtonState(NULL, &pushed, NULL);
-    if (pushed & kButtonA || pushed & kButtonB) { state->curr_phase = pGameRunning; }
+    if (pushed & kButtonA || pushed & kButtonB) {
+        
+        initGameRunning(state);
+    }
 }
 
 void gameOverLoop(GameState* state) {
-    
+    char* title = "Game Over";
+    state->pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 64, 50);
 }
 
 static int update(void* userdata) {

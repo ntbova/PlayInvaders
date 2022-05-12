@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4464BA16282C6B9F00D46BC9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2F3282702DA00C38CCE /* main.c */; };
 		449CD2F12827026A00C38CCE /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2EB2826FE2F00C38CCE /* Makefile */; };
-		449CD2F4282702DA00C38CCE /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2F3282702DA00C38CCE /* main.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		449CD2E32826FDCA00C38CCE /* libPlayInvaders.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libPlayInvaders.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		449CD2E32826FDCA00C38CCE /* libPlayInvaders Sim.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libPlayInvaders Sim.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		449CD2EB2826FE2F00C38CCE /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		449CD2F3282702DA00C38CCE /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -40,7 +40,7 @@
 		449CD2E42826FDCA00C38CCE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				449CD2E32826FDCA00C38CCE /* libPlayInvaders.dylib */,
+				449CD2E32826FDCA00C38CCE /* libPlayInvaders Sim.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -57,10 +57,27 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXLegacyTarget section */
+		4464BA10282C69AB00D46BC9 /* PlayInvaders Device */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "device pdc";
+			buildConfigurationList = 4464BA11282C69AB00D46BC9 /* Build configuration list for PBXLegacyTarget "PlayInvaders Device" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "";
+			dependencies = (
+			);
+			name = "PlayInvaders Device";
+			passBuildSettingsInEnvironment = 1;
+			productName = "PlayInvaders Device";
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
-		449CD2E22826FDCA00C38CCE /* PlayInvaders */ = {
+		449CD2E22826FDCA00C38CCE /* PlayInvaders Sim */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 449CD2E72826FDCA00C38CCE /* Build configuration list for PBXNativeTarget "PlayInvaders" */;
+			buildConfigurationList = 449CD2E72826FDCA00C38CCE /* Build configuration list for PBXNativeTarget "PlayInvaders Sim" */;
 			buildPhases = (
 				449CD2DF2826FDCA00C38CCE /* Headers */,
 				449CD2E02826FDCA00C38CCE /* Sources */,
@@ -71,9 +88,9 @@
 			);
 			dependencies = (
 			);
-			name = PlayInvaders;
+			name = "PlayInvaders Sim";
 			productName = PlayInvaders;
-			productReference = 449CD2E32826FDCA00C38CCE /* libPlayInvaders.dylib */;
+			productReference = 449CD2E32826FDCA00C38CCE /* libPlayInvaders Sim.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -85,6 +102,9 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1330;
 				TargetAttributes = {
+					4464BA10282C69AB00D46BC9 = {
+						CreatedOnToolsVersion = 13.3.1;
+					};
 					449CD2E22826FDCA00C38CCE = {
 						CreatedOnToolsVersion = 13.3.1;
 					};
@@ -103,7 +123,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				449CD2E22826FDCA00C38CCE /* PlayInvaders */,
+				449CD2E22826FDCA00C38CCE /* PlayInvaders Sim */,
+				4464BA10282C69AB00D46BC9 /* PlayInvaders Device */,
 			);
 		};
 /* End PBXProject section */
@@ -125,7 +146,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncp \"${TARGET_BUILD_DIR}/${EXECUTABLE_NAME}\" Source/pdex.dylib\ntouch Source/pdex.bin\nmake pdc\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\ncp \"${TARGET_BUILD_DIR}/${EXECUTABLE_NAME}\" Source/pdex.dylib\ntouch Source/pdex.bin\nmake\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -134,7 +155,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				449CD2F4282702DA00C38CCE /* main.c in Sources */,
+				4464BA16282C6B9F00D46BC9 /* main.c in Sources */,
 				449CD2F12827026A00C38CCE /* Makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -142,6 +163,31 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4464BA12282C69AB00D46BC9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4464BA13282C69AB00D46BC9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		449CD2E52826FDCA00C38CCE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -288,6 +334,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4464BA11282C69AB00D46BC9 /* Build configuration list for PBXLegacyTarget "PlayInvaders Device" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4464BA12282C69AB00D46BC9 /* Debug */,
+				4464BA13282C69AB00D46BC9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		449CD2DE2826FDCA00C38CCE /* Build configuration list for PBXProject "PlayInvaders" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -297,7 +352,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		449CD2E72826FDCA00C38CCE /* Build configuration list for PBXNativeTarget "PlayInvaders" */ = {
+		449CD2E72826FDCA00C38CCE /* Build configuration list for PBXNativeTarget "PlayInvaders Sim" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				449CD2E82826FDCA00C38CCE /* Debug */,
