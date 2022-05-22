@@ -11,7 +11,7 @@
 #define ENEMY_HEIGHT 18
 #define ENEMY_WIDTH 18
 #define BULLET_MAX 2
-#define ENEMY_MAX 26
+#define ENEMY_MAX 32
 #define MAX_FRAMERATE 30
 #define PLAYER_SPEED 5
 #define PLAYER_CRANK_SPEED 0.5f
@@ -79,15 +79,15 @@ void initGameRunning(GameState* state) {
     }
     
     int currEnemyPosX = SCREEN_MARGIN; int currEnemyPosY = SCREEN_MARGIN;
-    for (int i = 0; i < ENEMY_MAX; i++) {
+    state->enemy_pos_x[0] = currEnemyPosX; state->enemy_pos_y[0] = currEnemyPosY;
+    for (int i = 1; i < ENEMY_MAX; i++) {
         // For layout of enemies on screen, start from the top of the screen with a certain margin,
         // if we reach the end of the screen, then reset the x position and start a new row
-        if (currEnemyPosX < MAX_WIDTH - SCREEN_MARGIN) {
-            state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
-            currEnemyPosX += ENEMY_MARGIN_WIDTH + ENEMY_WIDTH;
-        } else {
+        currEnemyPosX += ENEMY_MARGIN_WIDTH + ENEMY_WIDTH;
+        if (currEnemyPosX >= MAX_WIDTH - SCREEN_MARGIN) {
             currEnemyPosX = SCREEN_MARGIN; currEnemyPosY += ENEMY_MARGIN_HEIGHT + ENEMY_HEIGHT;
         }
+        state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
     }
     
     state->pd->graphics->setFont(state->score_font);
@@ -134,8 +134,7 @@ int num_places(int n) {
 void get_dec_str(char* str, size_t len, uint32_t val)
 {
     uint8_t i;
-    for(i=1; i<=len; i++)
-    {
+    for(i=1; i<=len; i++) {
         str[len-i] = (uint8_t) ((val % 10UL) + '0');
         val /= 10;
     }
