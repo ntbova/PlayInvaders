@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>PlayInvaders Debug.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>PlayInvaders Sim copy.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>

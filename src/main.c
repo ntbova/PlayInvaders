@@ -12,20 +12,24 @@
 #define ENEMY_WIDTH 18
 #define BULLET_MAX 2
 #define ENEMY_MAX 32
-#define MAX_FRAMERATE 30
+#define MAX_FRAMERATE 50
 #define PLAYER_SPEED 5
 #define PLAYER_CRANK_SPEED 0.5f
 #define BULLET_SPEED 5
-#define ENEMY_SPEED 5
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
 #define SCREEN_MARGIN 24
+#define ENEMY_STARTING_SPEED 1
+#define ENEMY_SPEED_INCREMENT 1
 #define ENEMY_MARGIN_WIDTH 30
 #define ENEMY_MARGIN_HEIGHT 5
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
-#define SCORE_MULTIPLIER 10
+#define SCORE_STARTING_MULTIPLIER 5
+#define SCORE_INCREMENT 1
 #define SCORE_POS_X 360
-#define SCORE_POS_Y 5
+#define SCORE_POS_Y 3
+#define LEVEL_POS_X 15
+#define LEVEL_POS_Y 3
 
 static int update(void* userdata);
 
@@ -41,12 +45,15 @@ typedef struct GameStates {
     LCDFont* score_font;
     enum GamePhases curr_phase;
     uint32_t curr_score;
+    uint32_t curr_score_multiplier;
+    uint8_t curr_level;
     int ship_pos_x;
     int ship_pos_y;
     int bullet_pos_x[BULLET_MAX];
     int bullet_pos_y[BULLET_MAX];
     int enemy_pos_x[ENEMY_MAX];
     int enemy_pos_y[ENEMY_MAX];
+    int enemy_speed;
     int enemy_move_time;
 } GameState;
 
@@ -67,17 +74,7 @@ LCDSprite* loadSpriteFromBitmap(PlaydateAPI* pd, LCDBitmap* bmp, LCDBitmapFlip f
     return pathSprite;
 }
 
-void initGameRunning(GameState* state) {
-    state->curr_phase = pGameRunning;
-    
-    state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
-    state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
-    
-    for (int i = 0; i < BULLET_MAX; i++) {
-        state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
-        state->enemy_pos_x[i] = INT32_MIN; state->enemy_pos_y[i] = INT32_MIN;
-    }
-    
+void resetEnemyPosition(GameState* state) {
     int currEnemyPosX = SCREEN_MARGIN; int currEnemyPosY = SCREEN_MARGIN;
     state->enemy_pos_x[0] = currEnemyPosX; state->enemy_pos_y[0] = currEnemyPosY;
     for (int i = 1; i < ENEMY_MAX; i++) {
@@ -89,6 +86,24 @@ void initGameRunning(GameState* state) {
         }
         state->enemy_pos_x[i] = currEnemyPosX; state->enemy_pos_y[i] = currEnemyPosY;
     }
+}
+
+void initGameRunning(GameState* state) {
+    state->curr_phase = pGameRunning;
+    
+    state->curr_level = 1;
+    state->curr_score_multiplier = SCORE_STARTING_MULTIPLIER;
+    state->enemy_speed = ENEMY_STARTING_SPEED;
+    
+    state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
+    state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
+    
+    for (int i = 0; i < BULLET_MAX; i++) {
+        state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+        state->enemy_pos_x[i] = INT32_MIN; state->enemy_pos_y[i] = INT32_MIN;
+    }
+    
+    resetEnemyPosition(state);
     
     state->pd->graphics->setFont(state->score_font);
 }
@@ -96,6 +111,14 @@ void initGameRunning(GameState* state) {
 void initGameOver(GameState* state) {
     state->curr_phase = pGameOver;
     state->pd->graphics->setFont(state->title_font);
+}
+
+void incrementLevel(GameState* state) {
+    state->curr_level += 1;
+    state->enemy_speed += ENEMY_SPEED_INCREMENT;
+    state->curr_score_multiplier += SCORE_INCREMENT;
+    
+    resetEnemyPosition(state);
 }
 
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
@@ -220,12 +243,14 @@ void moveAssets(GameState* state) {
             bullet.width = BULLET_WIDTH; bullet.height = BULLET_HEIGHT;
             enemy.width = ENEMY_WIDTH; enemy.height = ENEMY_HEIGHT;
             for (int j = 0; j < ENEMY_MAX; j++) {
-                enemy.x = state->enemy_pos_x[j]; enemy.y = state->enemy_pos_y[j];
-                if (check_collision(bullet, enemy)) {
-                    state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
-                    state->enemy_pos_x[j] = INT32_MIN; state->enemy_pos_y[j] = INT32_MIN;
-                    // Increment score after hit
-                    state->curr_score += SCORE_MULTIPLIER;
+                if (state->enemy_pos_y[j] != INT32_MIN) {
+                    enemy.x = state->enemy_pos_x[j]; enemy.y = state->enemy_pos_y[j];
+                    if (check_collision(bullet, enemy)) {
+                        state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
+                        state->enemy_pos_x[j] = INT32_MIN; state->enemy_pos_y[j] = INT32_MIN;
+                        // Increment score after hit
+                        state->curr_score += state->curr_score_multiplier;
+                    }
                 }
             }
         }
@@ -234,27 +259,39 @@ void moveAssets(GameState* state) {
         }
     }
     
-    // If enough time has passed (ENEMY_MOVEMENT_FREQ), go through and move each
-    // enemy still active
-    int currTime = state->pd->system->getCurrentTimeMilliseconds();
-    if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ) {
-        for (int i = 0; i < ENEMY_MAX; i++) {
-            if (state->enemy_pos_y[i] != INT32_MIN) {
-                state->enemy_pos_y[i] += ENEMY_SPEED;
-                // If enemy reaches the bottom of the screen, set the game
-                // into a game over phase
-                if (state->enemy_pos_y[i] >= MAX_HEIGHT) {
-                    initGameOver(state); break;
+    // Keep track of the number of enemies still onscreen.
+    int curr_num_enemies = 0;
+    for (int i = 0; i < ENEMY_MAX; i++) {
+        if (state->enemy_pos_y[i] != INT32_MIN) {
+            curr_num_enemies += 1;
+        }
+    }
+    //Increment the level and reset if there are no more enemies left
+    if (curr_num_enemies == 0) {
+        incrementLevel(state);
+    }
+    else {
+        // If enough time has passed (ENEMY_MOVEMENT_FREQ), go through and move each
+        // enemy still active
+        int currTime = state->pd->system->getCurrentTimeMilliseconds();
+        if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ) {
+            for (int i = 0; i < ENEMY_MAX; i++) {
+                if (state->enemy_pos_y[i] != INT32_MIN) {
+                    state->enemy_pos_y[i] += state->enemy_speed;
+                    // If enemy reaches the bottom of the screen, set the game
+                    // into a game over phase
+                    if (state->enemy_pos_y[i] >= MAX_HEIGHT) {
+                        initGameOver(state); break;
+                    }
                 }
             }
+            // Reset enemy move time
+            state->enemy_move_time = currTime;
         }
-        // Reset enemy move time
-        state->enemy_move_time = currTime;
     }
 }
 
 void renderAssets(GameState* state) {
-    
     state->pd->graphics->clear(kColorWhite);
     
     // Don't render assets if we've switched to a game over or other phase
@@ -279,6 +316,10 @@ void renderAssets(GameState* state) {
     int digits = num_places(state->curr_score);
     char scoreStr[digits]; get_dec_str(scoreStr, digits, state->curr_score);
     state->pd->graphics->drawText(scoreStr, digits, kASCIIEncoding, SCORE_POS_X, SCORE_POS_Y);
+    // Render level
+    digits = num_places(state->curr_level);
+    char levelStr[digits]; get_dec_str(levelStr, digits, state->curr_level);
+    state->pd->graphics->drawText(levelStr, digits, kASCIIEncoding, LEVEL_POS_X, LEVEL_POS_Y);
 }
 
 void mainMenuLoop(GameState* state) {
@@ -288,7 +329,6 @@ void mainMenuLoop(GameState* state) {
     PDButtons pushed;
     state->pd->system->getButtonState(NULL, &pushed, NULL);
     if (pushed & kButtonA || pushed & kButtonB) {
-        
         initGameRunning(state);
     }
 }
