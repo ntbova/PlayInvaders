@@ -18,10 +18,11 @@
 #define BULLET_SPEED 5
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
-#define SCREEN_MARGIN 24
-#define ENEMY_STARTING_SPEED 1
+#define SCREEN_MARGIN 36
+#define ENEMY_STARTING_SPEED 5
 #define ENEMY_SPEED_INCREMENT 1
-#define ENEMY_MARGIN_WIDTH 30
+#define ENEMY_MARGIN_WIDTH 24
+#define ENEMY_SCREEN_WIDTH_MARGIN 10
 #define ENEMY_MARGIN_HEIGHT 5
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
 #define SCORE_STARTING_MULTIPLIER 5
@@ -54,7 +55,8 @@ typedef struct GameStates {
     int bullet_pos_y[BULLET_MAX];
     int enemy_pos_x[ENEMY_MAX];
     int enemy_pos_y[ENEMY_MAX];
-    int enemy_speed;
+    int enemy_speed_x;
+    int enemy_speed_y;
     int enemy_move_time;
 } GameState;
 
@@ -94,7 +96,7 @@ void initGameRunning(GameState* state) {
     
     state->curr_level = 1;
     state->curr_score_multiplier = SCORE_STARTING_MULTIPLIER;
-    state->enemy_speed = ENEMY_STARTING_SPEED;
+    state->enemy_speed_x = ENEMY_STARTING_SPEED; state->enemy_speed_y = ENEMY_STARTING_SPEED;
     
     state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
     state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
@@ -124,7 +126,13 @@ void initGameOver(GameState* state) {
 
 void incrementLevel(GameState* state) {
     state->curr_level += 1;
-    state->enemy_speed += ENEMY_SPEED_INCREMENT;
+    if (state->enemy_speed_x > 0) {
+        state->enemy_speed_x += ENEMY_SPEED_INCREMENT;
+    }
+    else {
+        state->enemy_speed_x -= ENEMY_SPEED_INCREMENT;
+    }
+    state->enemy_speed_y += ENEMY_SPEED_INCREMENT;
     state->curr_score_multiplier += SCORE_INCREMENT;
     
     resetEnemyPosition(state);
@@ -227,7 +235,7 @@ void checkButtons(GameState* state) {
         }
     }
     
-    if (pushed & kButtonB || pushed & kButtonUp) { shootBullets(state); }
+    if (pushed & kButtonA || pushed & kButtonB || pushed & kButtonUp) { shootBullets(state); }
 }
 
 void checkCrank(GameState* state) {
@@ -284,9 +292,27 @@ void moveAssets(GameState* state) {
         // enemy still active
         int currTime = state->pd->system->getCurrentTimeMilliseconds();
         if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ) {
+            int speedFlipped = 0;
+            // Perform initial check to see if any enemies have reached the left/right edges of the screen.
+            // Use that to determine which direction to move them in this cycle
             for (int i = 0; i < ENEMY_MAX; i++) {
                 if (state->enemy_pos_y[i] != INT32_MIN) {
-                    state->enemy_pos_y[i] += state->enemy_speed;
+                    if (!speedFlipped && (state->enemy_pos_x[i] + state->enemy_speed_x >= MAX_WIDTH - ENEMY_SCREEN_WIDTH_MARGIN - ENEMY_WIDTH
+                        || state->enemy_pos_x[i] + state->enemy_speed_x <= ENEMY_SCREEN_WIDTH_MARGIN + ENEMY_WIDTH)) {
+                        state->enemy_speed_x = -state->enemy_speed_x; speedFlipped = 1;
+                        break;
+                    }
+                }
+            }
+            
+            for (int i = 0; i < ENEMY_MAX; i++) {
+                if (state->enemy_pos_y[i] != INT32_MIN) {
+                    if (speedFlipped) {
+                        state->enemy_pos_y[i] += state->enemy_speed_y;
+                    }
+                    else {
+                        state->enemy_pos_x[i] += state->enemy_speed_x;
+                    }
                     // If enemy reaches the bottom of the screen, set the game
                     // into a game over phase
                     if (state->enemy_pos_y[i] >= MAX_HEIGHT - PLAYER_HEIGHT - 15) {
