@@ -26,6 +26,7 @@
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
 #define SCORE_STARTING_MULTIPLIER 5
 #define SCORE_INCREMENT 1
+#define TIME_DURING_GAME_OVER 5
 #define SCORE_POS_X 360
 #define SCORE_POS_Y 3
 #define LEVEL_POS_X 15
@@ -108,9 +109,17 @@ void initGameRunning(GameState* state) {
     state->pd->graphics->setFont(state->score_font);
 }
 
+void initMainMenu(GameState* state)
+{
+    state->curr_phase = pMainMenu;
+}
+
 void initGameOver(GameState* state) {
     state->curr_phase = pGameOver;
     state->pd->graphics->setFont(state->title_font);
+    // Reset elapsed time here. After a certain amount of time has passed in
+    // game over phase, then return to main menu.
+    state->pd->system->resetElapsedTime();
 }
 
 void incrementLevel(GameState* state) {
@@ -280,7 +289,7 @@ void moveAssets(GameState* state) {
                     state->enemy_pos_y[i] += state->enemy_speed;
                     // If enemy reaches the bottom of the screen, set the game
                     // into a game over phase
-                    if (state->enemy_pos_y[i] >= MAX_HEIGHT) {
+                    if (state->enemy_pos_y[i] >= MAX_HEIGHT - PLAYER_HEIGHT - 15) {
                         initGameOver(state); break;
                     }
                 }
@@ -292,8 +301,6 @@ void moveAssets(GameState* state) {
 }
 
 void renderAssets(GameState* state) {
-    state->pd->graphics->clear(kColorWhite);
-    
     // Don't render assets if we've switched to a game over or other phase
     if (state->curr_phase != pGameRunning) { return; }
     
@@ -336,10 +343,15 @@ void mainMenuLoop(GameState* state) {
 void gameOverLoop(GameState* state) {
     char* title = "Game Over";
     state->pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 64, 50);
+    // If enough time has passed, go back to main menu
+    if (state->pd->system->getElapsedTime() > TIME_DURING_GAME_OVER) {
+        initMainMenu(state);
+    }
 }
 
 static int update(void* userdata) {
 	GameState* state = userdata;
+    state->pd->graphics->clear(kColorWhite);
 	
     switch (state->curr_phase)
     {
