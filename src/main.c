@@ -25,6 +25,7 @@
 #define ENEMY_SCREEN_WIDTH_MARGIN 10
 #define ENEMY_MARGIN_HEIGHT 5
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
+#define ENEMY_MOVEMENT_FREQ_OFFSET 32
 #define SCORE_STARTING_MULTIPLIER 5
 #define SCORE_INCREMENT 1
 #define TIME_DURING_GAME_OVER 5
@@ -291,7 +292,7 @@ void moveAssets(GameState* state) {
         // If enough time has passed (ENEMY_MOVEMENT_FREQ), go through and move each
         // enemy still active
         int currTime = state->pd->system->getCurrentTimeMilliseconds();
-        if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ) {
+        if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ - (ENEMY_MOVEMENT_FREQ_OFFSET * (ENEMY_MAX - curr_num_enemies))) {
             int speedFlipped = 0;
             // Perform initial check to see if any enemies have reached the left/right edges of the screen.
             // Use that to determine which direction to move them in this cycle
