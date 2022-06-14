@@ -16,6 +16,7 @@
 #define PLAYER_SPEED 5
 #define PLAYER_CRANK_SPEED 0.5f
 #define BULLET_SPEED 5
+#define ENEMY_BULLET_SPEED 2
 #define MAX_HEIGHT 240
 #define MAX_WIDTH 400
 #define SCREEN_MARGIN 36
@@ -26,6 +27,7 @@
 #define ENEMY_MARGIN_HEIGHT 5
 #define ENEMY_MOVEMENT_FREQ 1000 // ms
 #define ENEMY_MOVEMENT_FREQ_OFFSET 32
+#define ENEMY_FIRING_INTERVAL 3000 // ms
 #define SCORE_STARTING_MULTIPLIER 5
 #define SCORE_INCREMENT 1
 #define TIME_DURING_GAME_OVER 5
@@ -56,9 +58,12 @@ typedef struct GameStates {
     int bullet_pos_y[BULLET_MAX];
     int enemy_pos_x[ENEMY_MAX];
     int enemy_pos_y[ENEMY_MAX];
+    int enemy_bullet_pos_x[BULLET_MAX];
+    int enemy_bullet_pos_y[BULLET_MAX];
     int enemy_speed_x;
     int enemy_speed_y;
     int enemy_move_time;
+    int enemy_fire_time;
 } GameState;
 
 #ifdef _WINDLL
@@ -105,6 +110,7 @@ void initGameRunning(GameState* state) {
     for (int i = 0; i < BULLET_MAX; i++) {
         state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
         state->enemy_pos_x[i] = INT32_MIN; state->enemy_pos_y[i] = INT32_MIN;
+        state->enemy_bullet_pos_x[i] = INT32_MIN; state->enemy_bullet_pos_y[i] = INT32_MIN;
     }
     
     resetEnemyPosition(state);
@@ -153,6 +159,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
         
         state->curr_phase = pMainMenu;
         state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
+        state->enemy_fire_time = state->pd->system->getCurrentTimeMilliseconds();
         state->curr_score = 0;
         
         pd->display->setRefreshRate(MAX_FRAMERATE);
@@ -219,6 +226,16 @@ void shootBullets(GameState* state) {
     }
 }
 
+void shootEnemyBullets(GameState* state, int bulletPosX, int bulletPosY) {
+    for (int i = 0; i < BULLET_MAX; i++) {
+        if (state->enemy_bullet_pos_y[i] == INT32_MIN) {
+            state->enemy_bullet_pos_x[i] = bulletPosX;
+            state->enemy_bullet_pos_y[i] = bulletPosY;
+            break;
+        }
+    }
+}
+
 void checkButtons(GameState* state) {
     PDButtons current;
     PDButtons pushed;
@@ -275,6 +292,25 @@ void moveAssets(GameState* state) {
         if (state->bullet_pos_y[i] < 0) {
             state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
         }
+        // Do the same for enemy bullets
+        if (state->enemy_bullet_pos_y[i] != INT32_MIN) {
+            state->enemy_bullet_pos_y[i] += ENEMY_BULLET_SPEED;
+            
+            if (state->enemy_bullet_pos_y[i] > MAX_HEIGHT) {
+                state->enemy_bullet_pos_x[i] = INT32_MIN;
+                state->enemy_bullet_pos_y[i] = INT32_MIN;
+            }
+            else {
+                PDRect bullet, player;
+                bullet.x = state->enemy_bullet_pos_x[i]; bullet.y = state->enemy_bullet_pos_y[i];
+                bullet.width = BULLET_WIDTH; bullet.height = BULLET_HEIGHT;
+                player.x = state->ship_pos_x; player.y = state->ship_pos_y;
+                player.width = PLAYER_WIDTH; player.height = PLAYER_HEIGHT;
+                if (check_collision(player, bullet)) {
+                    initGameOver(state); break;
+                }
+            }
+        }
     }
     
     // Keep track of the number of enemies still onscreen.
@@ -292,6 +328,11 @@ void moveAssets(GameState* state) {
         // If enough time has passed (ENEMY_MOVEMENT_FREQ), go through and move each
         // enemy still active
         int currTime = state->pd->system->getCurrentTimeMilliseconds();
+        int allowEnemyFire = 0;
+        // If enough time has passed (ENEMY_FIRING_INTERVAL), set flag to allow enemies to fire
+        if (currTime - state->enemy_fire_time > ENEMY_FIRING_INTERVAL) {
+            allowEnemyFire = 1;
+        }
         if (currTime - state->enemy_move_time > ENEMY_MOVEMENT_FREQ - (ENEMY_MOVEMENT_FREQ_OFFSET * (ENEMY_MAX - curr_num_enemies))) {
             int speedFlipped = 0;
             // Perform initial check to see if any enemies have reached the left/right edges of the screen.
@@ -319,6 +360,15 @@ void moveAssets(GameState* state) {
                     if (state->enemy_pos_y[i] >= MAX_HEIGHT - PLAYER_HEIGHT - 15) {
                         initGameOver(state); break;
                     }
+                    // If we are allowing an enemy to fire, use a random number generated here to determine
+                    // if the current enemy should fire. Only do this once per firing cycle.
+                    if (allowEnemyFire) {
+                        int fireNow = (rand() % 20) > 18;
+                        if (fireNow) {
+                            shootEnemyBullets(state, state->enemy_pos_x[i], state->enemy_pos_y[i]);
+                            allowEnemyFire = 0;
+                        }
+                    }
                 }
             }
             // Reset enemy move time
@@ -337,6 +387,9 @@ void renderAssets(GameState* state) {
     for (int i = 0; i < BULLET_MAX; i++) {
         if (state->bullet_pos_y[i] != INT32_MIN) {
             state->pd->graphics->fillRect(state->bullet_pos_x[i], state->bullet_pos_y[i], BULLET_WIDTH, BULLET_HEIGHT, kColorBlack);
+        }
+        if (state->enemy_bullet_pos_y[i] != INT32_MIN) {
+            state->pd->graphics->fillRect(state->enemy_bullet_pos_x[i], state->enemy_bullet_pos_y[i], BULLET_WIDTH, BULLET_HEIGHT, kColorBlack);
         }
     }
     // Render enemies on screen
