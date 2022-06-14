@@ -101,6 +101,7 @@ void initGameRunning(GameState* state) {
     state->curr_phase = pGameRunning;
     
     state->curr_level = 1;
+    state->curr_score = 0;
     state->curr_score_multiplier = SCORE_STARTING_MULTIPLIER;
     state->enemy_speed_x = ENEMY_STARTING_SPEED; state->enemy_speed_y = ENEMY_STARTING_SPEED;
     
