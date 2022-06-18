@@ -31,10 +31,14 @@
 #define SCORE_STARTING_MULTIPLIER 5
 #define SCORE_INCREMENT 1
 #define TIME_DURING_GAME_OVER 5
+#define STARTING_LIVES 3
+#define LIVES_MAX_DIGITS 1
 #define SCORE_POS_X 360
 #define SCORE_POS_Y 3
 #define LEVEL_POS_X 15
 #define LEVEL_POS_Y 3
+#define LIVES_POS_X 200
+#define LIVES_POS_Y 3
 
 static int update(void* userdata);
 
@@ -52,6 +56,7 @@ typedef struct GameStates {
     uint32_t curr_score;
     uint32_t curr_score_multiplier;
     uint8_t curr_level;
+    uint8_t curr_lives;
     int ship_pos_x;
     int ship_pos_y;
     int bullet_pos_x[BULLET_MAX];
@@ -97,16 +102,21 @@ void resetEnemyPosition(GameState* state) {
     }
 }
 
+void resetPlayerPosition(GameState* state) {
+    state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
+    state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
+}
+
 void initGameRunning(GameState* state) {
     state->curr_phase = pGameRunning;
     
     state->curr_level = 1;
     state->curr_score = 0;
+    state->curr_lives = STARTING_LIVES;
     state->curr_score_multiplier = SCORE_STARTING_MULTIPLIER;
     state->enemy_speed_x = ENEMY_STARTING_SPEED; state->enemy_speed_y = ENEMY_STARTING_SPEED;
     
-    state->ship_pos_x = MAX_WIDTH; state->ship_pos_x /= 2;
-    state->ship_pos_y = MAX_HEIGHT; state->ship_pos_y -= 15;
+    resetPlayerPosition(state);
     
     for (int i = 0; i < BULLET_MAX; i++) {
         state->bullet_pos_x[i] = INT32_MIN; state->bullet_pos_y[i] = INT32_MIN;
@@ -119,17 +129,25 @@ void initGameRunning(GameState* state) {
     state->pd->graphics->setFont(state->score_font);
 }
 
-void initMainMenu(GameState* state)
-{
+void initMainMenu(GameState* state) {
     state->curr_phase = pMainMenu;
 }
 
-void initGameOver(GameState* state) {
-    state->curr_phase = pGameOver;
-    state->pd->graphics->setFont(state->title_font);
-    // Reset elapsed time here. After a certain amount of time has passed in
-    // game over phase, then return to main menu.
-    state->pd->system->resetElapsedTime();
+void checkInitGameOver(GameState* state) {
+    // Check to see if the player still has any lives left. Decrement
+    // the lives and reset player position if there are, init game over
+    // if there are no lives left
+    if (state->curr_lives > 0) {
+        state->curr_lives = state->curr_lives - 1;
+        resetPlayerPosition(state);
+    }
+    else {
+        state->curr_phase = pGameOver;
+        state->pd->graphics->setFont(state->title_font);
+        // Reset elapsed time here. After a certain amount of time has passed in
+        // game over phase, then return to main menu.
+        state->pd->system->resetElapsedTime();
+    }
 }
 
 void incrementLevel(GameState* state) {
@@ -189,7 +207,6 @@ void get_dec_str(char* str, size_t len, uint32_t val)
     }
     str[i-1] = '\0';
 }
-
 
 int check_collision(PDRect a, PDRect b) {
     //The sides of the rectangles
@@ -308,7 +325,9 @@ void moveAssets(GameState* state) {
                 player.x = state->ship_pos_x; player.y = state->ship_pos_y;
                 player.width = PLAYER_WIDTH; player.height = PLAYER_HEIGHT;
                 if (check_collision(player, bullet)) {
-                    initGameOver(state); break;
+                    // Remove bullet after collision. Check to see if game over state has been reached
+                    state->enemy_bullet_pos_x[i] = INT32_MIN; state->enemy_bullet_pos_y[i] = INT32_MIN;
+                    checkInitGameOver(state); break;
                 }
             }
         }
@@ -359,7 +378,7 @@ void moveAssets(GameState* state) {
                     // If enemy reaches the bottom of the screen, set the game
                     // into a game over phase
                     if (state->enemy_pos_y[i] >= MAX_HEIGHT - PLAYER_HEIGHT - 15) {
-                        initGameOver(state); break;
+                        checkInitGameOver(state); break;
                     }
                     // If we are allowing an enemy to fire, use a random number generated here to determine
                     // if the current enemy should fire. Only do this once per firing cycle.
@@ -408,6 +427,10 @@ void renderAssets(GameState* state) {
     digits = num_places(state->curr_level);
     char levelStr[digits]; get_dec_str(levelStr, digits, state->curr_level);
     state->pd->graphics->drawText(levelStr, digits, kASCIIEncoding, LEVEL_POS_X, LEVEL_POS_Y);
+    // Render number of lives
+    digits = LIVES_MAX_DIGITS; char livesStr[digits];
+    get_dec_str(livesStr, digits, state->curr_lives);
+    state->pd->graphics->drawText(livesStr, digits, kASCIIEncoding, LIVES_POS_X, LIVES_POS_Y);
 }
 
 void mainMenuLoop(GameState* state) {
