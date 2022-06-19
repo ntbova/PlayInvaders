@@ -52,6 +52,8 @@ typedef struct GameStates {
     PlaydateAPI* pd;
     LCDFont* title_font;
     LCDFont* score_font;
+    PDSynth* player_fire_synth;
+    PDSynth* enemy_fire_synth;
     enum GamePhases curr_phase;
     uint32_t curr_score;
     uint32_t curr_score_multiplier;
@@ -164,6 +166,22 @@ void incrementLevel(GameState* state) {
     resetEnemyPosition(state);
 }
 
+void initSound(GameState* state) {
+    state->player_fire_synth = state->pd->sound->synth->newSynth();
+    state->pd->sound->synth->setWaveform(state->player_fire_synth, kWaveformTriangle);
+    state->pd->sound->synth->setAttackTime(state->player_fire_synth, 0);
+    state->pd->sound->synth->setDecayTime(state->player_fire_synth, 0.1);
+    state->pd->sound->synth->setSustainLevel(state->player_fire_synth, 0.2);
+    state->pd->sound->synth->setReleaseTime(state->player_fire_synth, 0.2);
+    
+    state->enemy_fire_synth = state->pd->sound->synth->newSynth();
+    state->pd->sound->synth->setWaveform(state->enemy_fire_synth, kWaveformSawtooth);
+    state->pd->sound->synth->setAttackTime(state->enemy_fire_synth, 0);
+    state->pd->sound->synth->setDecayTime(state->enemy_fire_synth, 0.05);
+    state->pd->sound->synth->setSustainLevel(state->enemy_fire_synth, 0.3);
+    state->pd->sound->synth->setReleaseTime(state->enemy_fire_synth, 0.1);
+}
+
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
 	(void)arg; // arg is currently only used for event = kEventKeyPressed
 
@@ -175,6 +193,9 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg) {
         state->title_font = state->pd->graphics->loadFont("fonts/BebasNeue-Regular-48", NULL);
         state->score_font = state->pd->graphics->loadFont("fonts/galvaniz-20", NULL);
         state->pd->graphics->setFont(state->title_font);
+        
+        // Sound
+        initSound(state);
         
         state->curr_phase = pMainMenu;
         state->enemy_move_time = state->pd->system->getCurrentTimeMilliseconds();
@@ -238,6 +259,8 @@ void shootBullets(GameState* state) {
             // Set the bullet at and above where the player is
             state->bullet_pos_x[i] = state->ship_pos_x + (PLAYER_WIDTH / 2);
             state->bullet_pos_y[i] = state->ship_pos_y - BULLET_HEIGHT;
+            // After firing bullet, play play firing sound effect with corrresponding synth
+            state->pd->sound->synth->playNote(state->player_fire_synth, 220, 1, 0.1, 0);
             // Break out of the loop (only shoot one bullet at a time)
             break;
         }
@@ -249,6 +272,8 @@ void shootEnemyBullets(GameState* state, int bulletPosX, int bulletPosY) {
         if (state->enemy_bullet_pos_y[i] == INT32_MIN) {
             state->enemy_bullet_pos_x[i] = bulletPosX;
             state->enemy_bullet_pos_y[i] = bulletPosY;
+            // Play enemy firing synth after firing bullet
+            state->pd->sound->synth->playNote(state->enemy_fire_synth, 220, 1, 0.1, 0);
             break;
         }
     }
