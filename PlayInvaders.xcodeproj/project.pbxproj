@@ -11,6 +11,28 @@
 		443183DB283AADC7007ED54C /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2EB2826FE2F00C38CCE /* Makefile */; };
 		4464BA16282C6B9F00D46BC9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2F3282702DA00C38CCE /* main.c */; };
 		449CD2F12827026A00C38CCE /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 449CD2EB2826FE2F00C38CCE /* Makefile */; };
+		44E7128E29F8883F00E7D208 /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7128D29F8883F00E7D208 /* game.c */; };
+		44E7128F29F8883F00E7D208 /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7128D29F8883F00E7D208 /* game.c */; };
+		44E7129429F8B53900E7D208 /* input.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129229F8B53900E7D208 /* input.h */; };
+		44E7129529F8B53900E7D208 /* input.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129229F8B53900E7D208 /* input.h */; };
+		44E7129629F8B53900E7D208 /* input.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129329F8B53900E7D208 /* input.c */; };
+		44E7129729F8B53900E7D208 /* input.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129329F8B53900E7D208 /* input.c */; };
+		44E7129A29F8B6C500E7D208 /* inits.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129829F8B6C500E7D208 /* inits.h */; };
+		44E7129B29F8B6C500E7D208 /* inits.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129829F8B6C500E7D208 /* inits.h */; };
+		44E7129C29F8B6C500E7D208 /* inits.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129929F8B6C500E7D208 /* inits.c */; };
+		44E7129D29F8B6C500E7D208 /* inits.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129929F8B6C500E7D208 /* inits.c */; };
+		44E712A029F8B9AC00E7D208 /* gfx.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129E29F8B9AC00E7D208 /* gfx.h */; };
+		44E712A129F8B9AC00E7D208 /* gfx.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E7129E29F8B9AC00E7D208 /* gfx.h */; };
+		44E712A229F8B9AC00E7D208 /* gfx.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129F29F8B9AC00E7D208 /* gfx.c */; };
+		44E712A329F8B9AC00E7D208 /* gfx.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E7129F29F8B9AC00E7D208 /* gfx.c */; };
+		44E712A629F8B9ED00E7D208 /* helpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E712A429F8B9ED00E7D208 /* helpers.h */; };
+		44E712A729F8B9ED00E7D208 /* helpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E712A429F8B9ED00E7D208 /* helpers.h */; };
+		44E712A829F8B9ED00E7D208 /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E712A529F8B9ED00E7D208 /* helpers.c */; };
+		44E712A929F8B9ED00E7D208 /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E712A529F8B9ED00E7D208 /* helpers.c */; };
+		44E712AC29F9FFD900E7D208 /* physics.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E712AA29F9FFD900E7D208 /* physics.h */; };
+		44E712AD29F9FFDA00E7D208 /* physics.h in Headers */ = {isa = PBXBuildFile; fileRef = 44E712AA29F9FFD900E7D208 /* physics.h */; };
+		44E712AE29F9FFDA00E7D208 /* physics.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E712AB29F9FFD900E7D208 /* physics.c */; };
+		44E712AF29F9FFDA00E7D208 /* physics.c in Sources */ = {isa = PBXBuildFile; fileRef = 44E712AB29F9FFD900E7D208 /* physics.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +40,19 @@
 		449CD2E32826FDCA00C38CCE /* libPlayInvaders Sim.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libPlayInvaders Sim.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		449CD2EB2826FE2F00C38CCE /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		449CD2F3282702DA00C38CCE /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = "<group>"; };
+		44E7128D29F8883F00E7D208 /* game.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = game.c; path = src/game.c; sourceTree = "<group>"; };
+		44E7129029F88D8E00E7D208 /* consts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = consts.h; path = src/consts.h; sourceTree = "<group>"; };
+		44E7129129F8940100E7D208 /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = game.h; path = src/game.h; sourceTree = "<group>"; };
+		44E7129229F8B53900E7D208 /* input.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = input.h; path = src/input.h; sourceTree = "<group>"; };
+		44E7129329F8B53900E7D208 /* input.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = input.c; path = src/input.c; sourceTree = "<group>"; };
+		44E7129829F8B6C500E7D208 /* inits.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = inits.h; path = src/inits.h; sourceTree = "<group>"; };
+		44E7129929F8B6C500E7D208 /* inits.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = inits.c; path = src/inits.c; sourceTree = "<group>"; };
+		44E7129E29F8B9AC00E7D208 /* gfx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = gfx.h; path = src/gfx.h; sourceTree = "<group>"; };
+		44E7129F29F8B9AC00E7D208 /* gfx.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = gfx.c; path = src/gfx.c; sourceTree = "<group>"; };
+		44E712A429F8B9ED00E7D208 /* helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = helpers.h; path = src/helpers.h; sourceTree = "<group>"; };
+		44E712A529F8B9ED00E7D208 /* helpers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = helpers.c; path = src/helpers.c; sourceTree = "<group>"; };
+		44E712AA29F9FFD900E7D208 /* physics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = physics.h; path = src/physics.h; sourceTree = "<group>"; };
+		44E712AB29F9FFD900E7D208 /* physics.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = physics.c; path = src/physics.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +76,19 @@
 		449CD2DA2826FDCA00C38CCE = {
 			isa = PBXGroup;
 			children = (
+				44E712AA29F9FFD900E7D208 /* physics.h */,
+				44E712AB29F9FFD900E7D208 /* physics.c */,
+				44E712A429F8B9ED00E7D208 /* helpers.h */,
+				44E712A529F8B9ED00E7D208 /* helpers.c */,
+				44E7129E29F8B9AC00E7D208 /* gfx.h */,
+				44E7129F29F8B9AC00E7D208 /* gfx.c */,
+				44E7129829F8B6C500E7D208 /* inits.h */,
+				44E7129929F8B6C500E7D208 /* inits.c */,
+				44E7129229F8B53900E7D208 /* input.h */,
+				44E7129329F8B53900E7D208 /* input.c */,
+				44E7129129F8940100E7D208 /* game.h */,
+				44E7129029F88D8E00E7D208 /* consts.h */,
+				44E7128D29F8883F00E7D208 /* game.c */,
 				449CD2F3282702DA00C38CCE /* main.c */,
 				449CD2EB2826FE2F00C38CCE /* Makefile */,
 				449CD2E42826FDCA00C38CCE /* Products */,
@@ -63,6 +111,11 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44E712A129F8B9AC00E7D208 /* gfx.h in Headers */,
+				44E712AD29F9FFDA00E7D208 /* physics.h in Headers */,
+				44E7129B29F8B6C500E7D208 /* inits.h in Headers */,
+				44E712A729F8B9ED00E7D208 /* helpers.h in Headers */,
+				44E7129529F8B53900E7D208 /* input.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,6 +123,11 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44E712A029F8B9AC00E7D208 /* gfx.h in Headers */,
+				44E712AC29F9FFD900E7D208 /* physics.h in Headers */,
+				44E7129A29F8B6C500E7D208 /* inits.h in Headers */,
+				44E712A629F8B9ED00E7D208 /* helpers.h in Headers */,
+				44E7129429F8B53900E7D208 /* input.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -189,6 +247,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44E712A929F8B9ED00E7D208 /* helpers.c in Sources */,
+				44E7129729F8B53900E7D208 /* input.c in Sources */,
+				44E7129D29F8B6C500E7D208 /* inits.c in Sources */,
+				44E7128F29F8883F00E7D208 /* game.c in Sources */,
+				44E712A329F8B9AC00E7D208 /* gfx.c in Sources */,
+				44E712AF29F9FFDA00E7D208 /* physics.c in Sources */,
 				443183DA283AADC7007ED54C /* main.c in Sources */,
 				443183DB283AADC7007ED54C /* Makefile in Sources */,
 			);
@@ -198,6 +262,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44E712A829F8B9ED00E7D208 /* helpers.c in Sources */,
+				44E7129629F8B53900E7D208 /* input.c in Sources */,
+				44E7129C29F8B6C500E7D208 /* inits.c in Sources */,
+				44E7128E29F8883F00E7D208 /* game.c in Sources */,
+				44E712A229F8B9AC00E7D208 /* gfx.c in Sources */,
+				44E712AE29F9FFDA00E7D208 /* physics.c in Sources */,
 				4464BA16282C6B9F00D46BC9 /* main.c in Sources */,
 				449CD2F12827026A00C38CCE /* Makefile in Sources */,
 			);

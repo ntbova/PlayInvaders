@@ -21,7 +21,14 @@ endif
 VPATH += src
 
 # List C source files here
-SRC = src/main.c
+SRC = src/main.c \
+	src/game.c \
+	src/input.c \
+	src/inits.c \
+	src/helpers.c \
+	src/gfx.c \
+	src/physics.c
+	
 
 # List all user directories here
 UINCDIR = 
